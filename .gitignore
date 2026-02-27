@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+.angular/
+
+# .NET
+bin/
+obj/
+
+# Environment files
+.env
+appsettings.Development.json
+
+# OS
+.DS_Store
+
