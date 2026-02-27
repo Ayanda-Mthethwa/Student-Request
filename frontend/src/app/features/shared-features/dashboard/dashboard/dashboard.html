@@ -1,0 +1,178 @@
+<div class="dashboard-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">
+      <span class="logo-icon">◆</span>
+      <span class="logo-text">AAA</span>
+    </h2>
+
+    <nav class="menu">
+      <a routerLink="/dashboard" class="menu-item active">🏠 Dashboard</a>
+      <a routerLink="/profile" class="menu-item">👤 Profile</a>
+      <a routerLink="/notifications" class="menu-item">🔔 Notifications</a>
+      <a routerLink="/settings" class="menu-item">⚙️ Settings</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- TOP NAVBAR -->
+    <header class="top-navbar">
+      <span class="navbar-title"></span>
+      <div class="navbar-right">
+        <span class="nav-date">{{ today | date:'fullDate' }}</span>
+
+        <div class="nav-profile-avatar">
+          <img *ngIf="user?.profilePicture" [src]="user.profilePicture" alt="Profile">
+
+          <div *ngIf="!user?.profilePicture" class="nav-avatar-placeholder">
+            {{ getInitials() }}
+          </div>
+
+          <!-- Upload button INSIDE avatar -->
+          <label class="nav-upload-btn">
+            📷
+            <input type="file" accept="image/*" hidden (change)="onProfileImageSelected($event)">
+          </label>
+        </div>
+
+        <button class="logout-btn" (click)="logout()">🚪 Logout</button>
+      </div>
+    </header>
+
+    <!-- YOUR EXISTING DASHBOARD (UNCHANGED) -->
+    <div class="dashboard-container">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your dashboard...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!isLoading && user">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1>Dashboard</h1>
+        <p class="welcome-text">Welcome back, <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span></p>
+      </div>
+
+    </div>
+
+    <!-- User Profile Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <div class="avatar-container">
+            <img [src]="user.profilePicture" [alt]="user.firstName" *ngIf="user.profilePicture">
+            <div class="avatar-placeholder" *ngIf="!user.profilePicture">
+              {{ getInitials() }}
+            </div>
+            
+            <!-- Upload overlay -->
+            <div class="avatar-overlay" *ngIf="!isUploading">
+              <label for="profileImageInput" class="upload-label">
+                <span class="upload-icon">📷</span>
+                Change Photo
+              </label>
+              <input 
+                type="file" 
+                id="profileImageInput" 
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                (change)="onProfileImageSelected($event)"
+                style="display: none"
+              >
+            </div>
+
+            <!-- Upload spinner -->
+            <div class="avatar-spinner" *ngIf="isUploading">
+              <div class="spinner-small"></div>
+              <span>Uploading...</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="profile-info">
+          <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+          <p class="profile-email">{{ user.email }}</p>
+          <p class="profile-role" *ngIf="user.role">Role: {{ user.role | titlecase }}</p>
+        </div>
+        
+        <div class="profile-actions">
+          <a routerLink="/profile" class="edit-profile-btn">Edit Profile</a>
+        </div>
+      </div>
+
+      <div class="profile-bio" *ngIf="user.bio">
+        <p>{{ user.bio }}</p>
+      </div>
+
+      <div class="profile-details">
+        <div class="detail-item" *ngIf="user.phoneNumber">
+          <span class="detail-label">📱 Phone</span>
+          <span class="detail-value">{{ user.phoneNumber }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">📅 Member Since</span>
+          <span class="detail-value">{{ formatDate(user.createdAt) }}</span>
+        </div>
+        <div class="detail-item" *ngIf="user.lastLogin">
+          <span class="detail-label">⏰ Last Login</span>
+          <span class="detail-value">{{ formatDate(user.lastLogin) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Message -->
+    <div class="upload-message" *ngIf="uploadMessage" [class.success]="uploadMessage.includes('success')" [class.error]="uploadMessage.includes('failed')">
+      {{ uploadMessage }}
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of getStatCards()" [style.--stat-color]="stat.color">
+        <div class="stat-icon">{{ stat.icon }}</div>
+        <div class="stat-content">
+          <h3>{{ stat.label }}</h3>
+          <p class="stat-value">{{ stat.value }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <h3>Quick Actions</h3>
+      <div class="action-buttons">
+        <a routerLink="/notifications" class="action-btn">
+          <span class="action-icon">🔔</span>
+          Notifications
+        </a>
+        <a routerLink="/profile" class="action-btn">
+          <span class="action-icon">👤</span>
+          View Profile
+        </a>
+        <a routerLink="/settings" class="action-btn">
+          <span class="action-icon">⚙️</span>
+          Settings
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity" *ngIf="getRecentActivities().length > 0">
+      <h3>Recent Activity</h3>
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of getRecentActivities()">
+          <div class="activity-icon">{{ activity.icon }}</div>
+          <div class="activity-content">
+            <p class="activity-action">{{ activity.action }}</p>
+            <p class="activity-details">{{ activity.details }}</p>
+          </div>
+          <div class="activity-time">{{ activity.time }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
